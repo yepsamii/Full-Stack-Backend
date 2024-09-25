@@ -1,6 +1,8 @@
 const express = require("express");
 const app = express();
 
+app.use(express.json());
+
 let persons = [
   {
     id: 1,
@@ -50,12 +52,14 @@ app.get("/api/persons/:id", (request, response) => {
     response.status(404).end();
   }
 });
-const newPerson = {
-  name: "Arto",
-  number: "040-123456",
+
+function getRandomInt(max) {
+  return Math.floor(Math.random() * max);
 }
 
 app.post("/api/persons", (request, response) => {
+  const newPerson = request.body;
+
   if (!newPerson.name || !newPerson.number) {
     return response.status(400).json({
       error: "name or number missing",
@@ -67,7 +71,7 @@ app.post("/api/persons", (request, response) => {
     });
   }
   const person = {
-    id: Math.floor(Math.random() * 1000),
+    id: getRandomInt(10000),
     name: newPerson.name,
     number: newPerson.number,
   };
@@ -77,10 +81,15 @@ app.post("/api/persons", (request, response) => {
 
 app.delete("/api/persons/:id", (request, response) => {
   const id = parseInt(request.params.id);
+  if (!persons.find((person) => person.id === id)) {
+    return response.status(404).json({
+      error: "person not found",
+    });
+  }
   persons = persons.filter((person) => person.id !== id);
   response.status(204).end();
 });
 
-const PORT = 3001;
+const PORT = 3002;
 app.listen(PORT);
 console.log(`Server running on port ${PORT}`);
