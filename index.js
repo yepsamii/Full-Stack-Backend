@@ -6,6 +6,7 @@ const app = express();
 
 app.use(express.json());
 app.use(cors())
+app.use(express.static('dist'))
 
 // Set up Morgan to use the custom format with the request body token
 app.use(
