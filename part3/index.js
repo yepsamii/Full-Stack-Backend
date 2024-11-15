@@ -1,7 +1,19 @@
 const express = require("express");
+const morgan = require("morgan");
+const cors = require('cors')
+
 const app = express();
 
 app.use(express.json());
+app.use(cors())
+
+// Set up Morgan to use the custom format with the request body token
+app.use(
+  morgan(":method :url :status :res[content-length] - :response-time ms :body")
+);
+
+// Define custom token to log request body
+morgan.token("body", (req) => JSON.stringify(req.body));
 
 let persons = [
   {
@@ -76,7 +88,9 @@ app.post("/api/persons", (request, response) => {
     number: newPerson.number,
   };
   persons = persons.concat(person);
-  response.json(person);
+
+  response.status(200).send("Person added");
+  // response.json(person);
 });
 
 app.delete("/api/persons/:id", (request, response) => {
