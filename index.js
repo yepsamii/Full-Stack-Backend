@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
+const Person = require("./models/person");
 
 const app = express();
 
@@ -16,8 +17,6 @@ app.use(
 
 // Define custom token to log request body
 morgan.token("body", (req) => JSON.stringify(req.body));
-
-const Person = require("./models/Person");
 
 let persons = [
   {
@@ -68,18 +67,10 @@ app.get("/api/persons", (request, response) => {
 });
 
 app.get("/api/persons/:id", (request, response) => {
-  const id = parseInt(request.params.id);
-  const person = persons.find((person) => person.id === id);
-  if (person) {
+  Person.findById(request.params.id).then((person) => {
     response.json(person);
-  } else {
-    response.status(404).end();
-  }
+  });
 });
-
-function getRandomInt(max) {
-  return Math.floor(Math.random() * max);
-}
 
 app.post("/api/persons", (request, response) => {
   const newPerson = request.body;
@@ -94,15 +85,21 @@ app.post("/api/persons", (request, response) => {
       error: "name must be unique",
     });
   }
-  const person = {
-    id: getRandomInt(10000),
+
+  const person = new Person({
     name: newPerson.name,
     number: newPerson.number,
-  };
-  persons = persons.concat(person);
+  });
 
-  response.status(200).send("Person added");
-  // response.json(person);
+  person
+    .save()
+    .then((savedPerson) => {
+      response.json(savedPerson);
+    })
+    .catch((error) => {
+      console.error("Error saving person:", error);
+      response.status(500).send("Internal Server Error");
+    });
 });
 
 app.delete("/api/persons/:id", (request, response) => {
