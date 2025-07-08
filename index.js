@@ -1,12 +1,13 @@
+require("dotenv").config();
 const express = require("express");
 const morgan = require("morgan");
-const cors = require('cors')
+const cors = require("cors");
 
 const app = express();
 
 app.use(express.json());
-app.use(cors())
-app.use(express.static('dist'))
+app.use(cors());
+app.use(express.static("dist"));
 
 // Set up Morgan to use the custom format with the request body token
 app.use(
@@ -15,6 +16,8 @@ app.use(
 
 // Define custom token to log request body
 morgan.token("body", (req) => JSON.stringify(req.body));
+
+const Person = require("./models/Person");
 
 let persons = [
   {
@@ -38,6 +41,7 @@ let persons = [
     number: "39-23-6423122",
   },
 ];
+
 const length = persons.length;
 const currentDate = new Date();
 
@@ -47,13 +51,20 @@ app.get("/", (request, response) => {
 
 app.get("/info", (request, response) => {
   response.send(
-    `<p>Phonebook has info for ${length} people</p>
+    `<p>Phone-book has info for ${length} people</p>
     <p>${currentDate}</p>`
   );
 });
 
 app.get("/api/persons", (request, response) => {
-  response.json(persons);
+  Person.find({})
+    .then((result) => {
+      response.json(result);
+    })
+    .catch((error) => {
+      console.error("Error fetching persons:", error);
+      response.status(500).send("Internal Server Error");
+    });
 });
 
 app.get("/api/persons/:id", (request, response) => {
@@ -105,6 +116,7 @@ app.delete("/api/persons/:id", (request, response) => {
   response.status(204).end();
 });
 
-const PORT = 3002;
-app.listen(PORT);
-console.log(`Server running on port ${PORT}`);
+const PORT = process.env.PORT || 8000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
